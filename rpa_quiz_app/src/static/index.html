@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPA Knowledge Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .quiz-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-container {
+            display: none;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .question-container.active {
+            display: block;
+        }
+
+        .question {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .options {
+            list-style: none;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: #667eea;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .score.pass {
+            color: #28a745;
+        }
+
+        .score.fail {
+            color: #dc3545;
+        }
+
+        .passcode {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="start-screen" id="startScreen">
+            <h1>🤖 RPA Knowledge Quiz</h1>
+            <p class="subtitle">Test your knowledge on Leapwork and RPA best practices</p>
+            
+            <div class="quiz-info">
+                <h3>Quiz Information</h3>
+                <p><strong>Questions:</strong> 7 random questions</p>
+                <p><strong>Pass Mark:</strong> 5 out of 7 (71%)</p>
+                <p><strong>Reward:</strong> Incremental passcode (LW000P, LW001P, etc.)</p>
+                <p><strong>Time Limit:</strong> None - take your time!</p>
+            </div>
+            
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading questions...</p>
+        </div>
+
+        <div id="quizContainer" style="display: none;">
+            <h1>RPA Knowledge Quiz</h1>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <p id="questionCounter">Question 1 of 7</p>
+            
+            <div id="questionsContainer"></div>
+            
+            <div class="navigation">
+                <button class="btn" id="prevBtn" onclick="previousQuestion()" disabled>Previous</button>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()">Next</button>
+                <button class="btn" id="submitBtn" onclick="submitQuiz()" style="display: none;">Submit Quiz</button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <h1>Quiz Results</h1>
+            <div class="score" id="scoreDisplay"></div>
+            <p id="resultMessage"></p>
+            <div id="passcodeDisplay"></div>
+            <button class="btn" onclick="restartQuiz()">Take Quiz Again</button>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestion = 0;
+        let userAnswers = {};
+
+        async function startQuiz() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/get_questions');
+                questions = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('quizContainer').style.display = 'block';
+                
+                displayQuestion();
+            } catch (error) {
+                console.error('Error loading questions:', error);
+                alert('Error loading questions. Please try again.');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'block';
+            }
+        }
+
+        function displayQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            
+            const questionData = questions[currentQuestion];
+            
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container active';
+            
+            questionDiv.innerHTML = `
+                <div class="question">
+                    <span class="question-number">Question ${currentQuestion + 1}:</span> ${questionData.question}
+                </div>
+                <ul class="options">
+                    ${questionData.options.map((option, index) => `
+                        <li class="option" onclick="selectOption(${currentQuestion}, '${option.replace(/'/g, "\\'")}', this)">
+                            <input type="radio" name="q${currentQuestion}" value="${option}" id="q${currentQuestion}_${index}">
+                            ${option}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            container.appendChild(questionDiv);
+            
+            // Restore previous selection if exists
+            if (userAnswers[currentQuestion]) {
+                const options = questionDiv.querySelectorAll('.option');
+                options.forEach(option => {
+                    if (option.textContent.trim() === userAnswers[currentQuestion]) {
+                        option.classList.add('selected');
+                    }
+                });
+            }
+            
+            updateProgress();
+            updateNavigation();
+        }
+
+        function selectOption(questionIndex, answer, element) {
+            // Remove selection from other options
+            const options = element.parentNode.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            element.classList.add('selected');
+            
+            // Store answer
+            userAnswers[questionIndex] = answer;
+            
+            updateNavigation();
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                displayQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                displayQuestion();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = `Question ${currentQuestion + 1} of ${questions.length}`;
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            prevBtn.disabled = currentQuestion === 0;
+            
+            if (currentQuestion === questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        async function submitQuiz() {
+            // Check if all questions are answered
+            if (Object.keys(userAnswers).length < questions.length) {
+                alert('Please answer all questions before submitting.');
+                return;
+            }
+            
+            // Prepare submission data
+            const submissionData = {
+                answers: {}
+            };
+            
+            questions.forEach((question, index) => {
+                submissionData.answers[index] = {
+                    question: question.question,
+                    answer: userAnswers[index]
+                };
+            });
+            
+            try {
+                const response = await fetch('/api/submit_quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submissionData)
+                });
+                
+                const result = await response.json();
+                showResults(result);
+            } catch (error) {
+                console.error('Error submitting quiz:', error);
+                alert('Error submitting quiz. Please try again.');
+            }
+        }
+
+        function showResults(result) {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const resultMessage = document.getElementById('resultMessage');
+            const passcodeDisplay = document.getElementById('passcodeDisplay');
+            const restartButton = document.querySelector('#results .btn');
+            
+            scoreDisplay.textContent = `${result.score}/${result.total}`;
+            scoreDisplay.className = result.passed ? 'score pass' : 'score fail';
+            
+            if (result.passed) {
+                resultMessage.innerHTML = `
+                    <h3>🎉 Congratulations! You passed!</h3>
+                    <p>You scored ${result.score} out of ${result.total} (${Math.round((result.score/result.total)*100)}%)</p>
+                    <p>Pass mark: ${result.pass_mark}/${result.total}</p>
+                    <p>Thank you for completing the quiz successfully!</p>
+                `;
+                passcodeDisplay.innerHTML = `
+                    <div class="passcode">
+                        Your Passcode: ${result.passcode}
+                    </div>
+                `;
+                // Hide the restart button when user passes
+                restartButton.style.display = 'none';
+            } else {
+                resultMessage.innerHTML = `
+                    <h3>😔 Sorry, you didn't pass this time.</h3>
+                    <p>You scored ${result.score} out of ${result.total} (${Math.round((result.score/result.total)*100)}%)</p>
+                    <p>You need at least ${result.pass_mark}/${result.total} to pass.</p>
+                    <p>Review the material and try again!</p>
+                `;
+                passcodeDisplay.innerHTML = '';
+                // Show the restart button when user fails
+                restartButton.style.display = 'inline-block';
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            userAnswers = {};
+            questions = [];
+            
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
+

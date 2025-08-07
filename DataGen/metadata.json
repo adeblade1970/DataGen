@@ -1,0 +1,5 @@
+{
+  "name": "UoB QA Team Test Data Generator",
+  "description": "An application to generate randomized and obfuscated test data from an input CSV or Excel file. Users can define generation patterns for each column to expand their test datasets while protecting sensitive information.",
+  "requestFramePermissions": []
+}
